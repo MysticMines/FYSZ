@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>凤阳县第三中学 · 信息站</title>
+<style>
+  :root {
+    --primary: #1a5276;
+    --primary-light: #2980b9;
+    --accent: #c0392b;
+    --gold: #b8860b;
+    --bg: #f0f4f8;
+    --text: #2c3e50;
+    --text-light: #5d6d7e;
+    --border: #e4eaf0;
+    --card-bg: #ffffff;
+    --radius: 16px;
+    --nav-h: 62px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Serif SC", serif;
+    color: var(--text); background: var(--bg);
+    overflow: hidden; height: 100vh; height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  /* ===== 顶部导航 ===== */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    height: var(--nav-h);
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+  }
+  nav {
+    width: 100%; max-width: 1100px; margin: 0 auto;
+    padding: 0 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-size: 1rem; font-weight: 700; color: var(--primary);
+    letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0; cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .logo:active { transform: scale(0.94); }
+  .logo::before {
+    content: "凤"; width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--primary); color: #fff;
+    border-radius: 8px; font-size: 0.9rem;
+    transition: background 0.3s;
+  }
+  .nav-tabs {
+    display: flex; gap: 4px; overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+    padding: 4px; border-radius: 12px;
+    background: #eef3f8;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tabs button {
+    border: none; background: transparent;
+    padding: 7px 16px; border-radius: 9px;
+    font-size: 0.84rem; color: var(--text-light);
+    cursor: pointer; white-space: nowrap;
+    font-family: inherit; transition: all 0.25s;
+  }
+  .nav-tabs button.active {
+    background: #fff; color: var(--primary);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(26,82,118,0.12);
+  }
+
+  /* ===== 页面容器 ===== */
+  .pages {
+    position: fixed; inset: var(--nav-h) 0 0 0;
+    overflow: hidden;
+  }
+  .page {
+    position: absolute; inset: 0;
+    overflow-y: auto; overflow-x: hidden;
+    padding: 28px 18px 40px;
+    opacity: 0; visibility: hidden;
+    transform: translateX(40px) scale(0.98);
+    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page.active {
+    opacity: 1; visibility: visible;
+    transform: translateX(0) scale(1);
+  }
+  .page.exit-left {
+    transform: translateX(-40px) scale(0.98);
+    opacity: 0;
+  }
+  .page-inner { max-width: 900px; margin: 0 auto; }
+
+  /* ===== 页面标题 ===== */
+  .page-title { text-align: center; margin-bottom: 26px; }
+  .page-title h2 {
+    font-size: 1.5rem; color: var(--primary);
+    letter-spacing: 4px; font-weight: 700;
+    display: inline-block; position: relative; padding-bottom: 12px;
+  }
+  .page-title h2::after {
+    content: ""; position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 44px; height: 3px; background: var(--gold); border-radius: 2px;
+  }
+  .page-title p {
+    margin-top: 10px; font-size: 0.84rem;
+    color: var(--text-light); letter-spacing: 1px;
+  }
+
+  /* ===== 堆叠卡片 ===== */
+  .stack-wrap {
+    position: relative; height: 380px; max-width: 340px;
+    margin: 0 auto 20px;
+  }
+  .stack-card {
+    position: absolute; inset: 0;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(26,82,118,0.12);
+    padding: 28px 24px;
+    display: flex; flex-direction: column;
+    cursor: grab;
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+    will-change: transform;
+    touch-action: none;
+    overflow: hidden;
+  }
+  .stack-card:active { cursor: grabbing; }
+  .stack-card.dragging { transition: none; }
+  .stack-card .card-tag {
+    display: inline-block; align-self: flex-start;
+    font-size: 0.72rem; padding: 4px 12px;
+    border-radius: 12px; letter-spacing: 1px;
+    margin-bottom: 16px;
+    background: #eaf2fb; color: var(--primary);
+  }
+  .stack-card h3 {
+    font-size: 1.25rem; color: var(--primary);
+    margin-bottom: 6px; letter-spacing: 1px;
+  }
+  .stack-card .year-big {
+    font-size: 2.4rem; font-weight: 700;
+    color: var(--gold); opacity: 0.25;
+    position: absolute; right: 20px; top: 18px;
+    line-height: 1;
+  }
+  .stack-card p {
+    font-size: 0.9rem; color: var(--text-light);
+    line-height: 1.85; flex: 1;
+  }
+  .stack-card .card-foot {
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    font-size: 0.78rem; color: #9aabba;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .stack-card[data-pos="0"] { transform: translateY(0) scale(1); z-index: 5; }
+  .stack-card[data-pos="1"] { transform: translateY(-12px) scale(0.95); z-index: 4; opacity: 0.8; }
+  .stack-card[data-pos="2"] { transform: translateY(-24px) scale(0.9); z-index: 3; opacity: 0.6; }
+  .stack-card[data-pos="3"] { transform: translateY(-34px) scale(0.85); z-index: 2; opacity: 0.35; }
+  .stack-card[data-pos="hidden"] { opacity: 0; transform: translateY(-40px) scale(0.8); z-index: 1; }
+
+  .stack-hint {
+    text-align: center; font-size: 0.78rem;
+    color: #9aabba; letter-spacing: 1px;
+    margin-bottom: 8px; animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
+  .stack-nav {
+    display: flex; justify-content: center; gap: 10px; margin-top: 6px;
+  }
+  .stack-nav button {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: #fff; color: var(--primary);
+    font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(26,82,118,0.06);
+  }
+  .stack-nav button:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .stack-nav button:active { transform: scale(0.92); }
+  .stack-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+  .stack-dots span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #cddae5; transition: all 0.3s;
+  }
+  .stack-dots span.on { background: var(--primary); width: 20px; border-radius: 4px; }
+
+  /* ===== 数据统计 ===== */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card-bg); border-radius: var(--radius);
+    text-align: center; padding: 22px 8px;
+    border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    transition: transform 0.2s; cursor: pointer;
+  }
+  .stat:hover { transform: translateY(-3px); }
+  .stat::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--primary-light), var(--gold));
+    opacity: 0.6;
+  }
+  .stat .num { font-size: 1.7rem; font-weight: 700; color: var(--primary); }
+  .stat .label { font-size: 0.76rem; color: var(--text-light); margin-top: 4px; }
+
+  /* ===== 普通卡片 ===== */
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card {
+    background: var(--card-bg); border-radius: var(--radius);
+    padding: 22px 20px; border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(26,82,118,0.04);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,82,118,0.1); }
+  .card h3 {
+    font-size: 0.95rem; color: var(--primary);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
+    letter-spacing: 0.5px;
+  }
+  .card h3::before {
+    content: ""; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--gold); flex-shrink: 0;
+  }
+  .card p { font-size: 0.86rem; color: var(--text-light); line-height: 1.85; }
+
+  /* ===== 标签（可点击） ===== */
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .tag-cloud span {
+    padding: 8px 18px; background: #eaf2f8; color: var(--primary);
+    border-radius: 20px; font-size: 0.8rem; border: 1px solid #d4e6f1;
+    transition: all 0.2s; cursor: pointer; position: relative;
+  }
+  .tag-cloud span:hover { background: var(--primary); color: #fff; transform: translateY(-2px); }
+  .tag-cloud span:active { transform: scale(0.96); }
+
+  /* ===== 信息列表 ===== */
+  .info-list { list-style: none; }
+  .info-list li {
+    display: flex; gap: 12px; padding: 11px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 0.86rem; color: var(--text-light);
+  }
+  .info-list li:last-child { border-bottom: none; }
+  .info-list .k { color: var(--primary); font-weight: 600; min-width: 70px; flex-shrink: 0; }
+
+  /* ===== 赋文说明 ===== */
+  .fu-card {
+    background: linear-gradient(135deg, #fdfbf7, #faf6ee);
+    border: 1px solid #e8dcc8; border-radius: var(--radius);
+    padding: 24px 22px; position: relative; margin-top: 16px;
+  }
+  .fu-card::before {
+    content: "赋"; position: absolute; top: 10px; right: 18px;
+    font-size: 2.6rem; color: rgba(184,134,11,0.12); font-weight: 700;
+  }
+  .fu-card h3 { font-size: 0.95rem; color: var(--gold); margin-bottom: 10px; letter-spacing: 1.5px; }
+  .fu-card p { font-size: 0.84rem; color: #6e5c3a; line-height: 1.9; }
+  .fu-card .disclaimer {
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px solid #e8dcc8;
+    font-size: 0.76rem; color: #9a8a6e;
+  }
+
+  /* ===== 时间线（可点击展开） ===== */
+  .tl-list { position: relative; padding-left: 26px; }
+  .tl-list::before {
+    content: ""; position: absolute; left: 6px; top: 6px; bottom: 6px;
+    width: 2px; background: linear-gradient(to bottom, var(--primary-light), var(--gold));
+    opacity: 0.4; border-radius: 2px;
+  }
+  .tl-item {
+    position: relative; margin-bottom: 12px;
+    background: var(--card-bg); border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.25s, transform 0.25s;
+    cursor: pointer;
+  }
+  .tl-item:hover { box-shadow: 0 6px 20px rgba(26,82,118,0.1); transform: translateX(2px); }
+  .tl-item::before {
+    content: ""; position: absolute; left: -24px; top: 22px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--primary-light);
+    transition: all 0.3s;
+  }
+  .tl-item.open::before { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 4px rgba(184,134,11,0.15); }
+  .tl-head {
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .tl-head .year {
+    font-size: 0.78rem; font-weight: 700; color: var(--accent);
+    letter-spacing: 1.5px; flex-shrink: 0;
+    min-width: 38px;
+  }
+  .tl-head h4 { font-size: 0.9rem; color: var(--primary); margin: 0; flex: 1; }
+  .tl-head .arrow {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-size: 0.8rem;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+  .tl-item.open .tl-head .arrow { transform: rotate(180deg); }
+  .tl-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 0 18px;
+  }
+  .tl-item.open .tl-body {
+    max-height: 200px; padding: 0 18px 16px;
+  }
+  .tl-body p { font-size: 0.84rem; color: var(--text-light); line-height: 1.85; }
+
+  /* ===== 浮层提示 ===== */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: rgba(26,82,118,0.95); color: #fff;
+    padding: 12px 22px; border-radius: 24px;
+    font-size: 0.84rem; letter-spacing: 0.5px;
+    box-shadow: 0 8px 28px rgba(26,82,118,0.3);
+    opacity: 0; transition: all 0.35s cubic-bezier(.4,0,.2,1);
+    z-index: 500; pointer-events: none;
+    max-width: 80vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== 彩蛋粒子 ===== */
+  #eggLayer {
+    position: fixed; inset: 0; pointer-events: none;
+    z-index: 999; overflow: hidden;
+  }
+  .egg-particle {
+    position: absolute; font-weight: 700;
+    color: var(--gold); opacity: 0;
+    animation: eggFloat 1.6s ease-out forwards;
+    font-size: 1.4rem;
+    text-shadow: 0 0 20px rgba(184,134,11,0.5);
+  }
+  @keyframes eggFloat {
+    0% { opacity: 0; transform: translateY(0) scale(0.5) rotate(0deg); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-120px) scale(1.6) rotate(30deg); }
+  }
+
+  /* ===== 页脚 ===== */
+  .page-foot {
+    text-align: center; padding: 24px 0 10px;
+    font-size: 0.74rem; color: #9aabba; line-height: 1.9;
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 700px) {
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .page-title h2 { font-size: 1.3rem; }
+    .stack-wrap { height: 360px; max-width: 300px; }
+  }
+  @media (max-width: 480px) {
+    .nav-tabs button { padding: 6px 12px; font-size: 0.78rem; }
+    .logo { font-size: 0.88rem; }
+    .logo::before { width: 26px; height: 26px; font-size: 0.8rem; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .stats { gap: 10px; }
+    .stat .num { font-size: 1.4rem; }
+    .stack-wrap { height: 340px; max-width: 270px; }
+    .stack-card h3 { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo" id="logoBtn">凤阳三中</div>
+    <div class="nav-tabs" id="navTabs">
+      <button data-page="home" class="active">首页</button>
+      <button data-page="history">历史</button>
+      <button data-page="scale">规模</button>
+      <button data-page="honor">荣誉</button>
+      <button data-page="contact">地址</button>
+    </div>
+  </nav>
+</header>
+
+<div class="pages" id="pages">
+
+  <!-- 首页 -->
+  <div class="page active" data-page="home">
+    <div class="page-inner">
+      <div class="page-title">
+        <h2>凤阳县第三中学</h2>
+        <p>始建于1964年 · 公办初级中学 · 以“明”为核心文化</p>
+      </div>
+      <div class="stack-hint">← 拖拽或滑动卡片 →</div>
+      <div class="stack-wrap" id="stackHome">
+        <div class="stack-card" data-pos="0">
+          <span class="card-tag">办学理念</span>
+          <span class="year-big">明</span>
+          <h3>为每个孩子打开一扇窗</h3>
+          <p>学校地处“帝王之乡、改革之乡、石英之乡、花鼓之乡”的凤阳，提出以“明”为核心的文化主张，构建完整的育人框架。</p>
+          <div class="card-foot"><span>文化主张</span><span>01</span></div>
+        </div>
+        <div class="stack-card" data-pos="1">
+          <span class="card-tag">校训体系</span>
+          <span class="year-big">训</span>
+          <h3>明达致远</h3>
+          <p>校训“明达致远”，校风“明德养正”，教风“明心求真”，学风“明理敏行”，构成“明”文化育人框架。</p>
+          <div class="card-foot"><span>校训 · 校风</span><span>02</span></div>
+        </div>
+        <div class="stack-card" data-pos="2">
+          <span class="card-tag">办学性质</span>
+          <span class="year-big">公</span>
+          <h3>公立初级中学</h3>
+          <p>实施初中学历教育，隶属于凤阳县教育体育局，是凤阳县城规模最大的初中校之一。</p>
+          <div class="card-foot"><span>隶属教体局</span><span>03</span></div>
+        </div>
+        <div class="stack-card" data-pos="3">
+          <span class="card-tag">校园环境</span>
+          <span class="year-big">园</span>
+          <h3>府城西护城河畔</h3>
+          <p>校址位于明中都皇故城东南、府城西护城河畔，六百年国子监文脉之地，环境清幽。</p>
+          <div class="card-foot"><span>明中都文脉</span><span>04</span></div>
+        </div>
+      </div>
+      <div class="stack-nav">
+        <button id="stackPrev" aria-label="上一张">‹</button>
+        <button id="stackNext" aria-label="下一张">›</button>
+      </div>
+      <div class="stack-dots" id="stackDots">
+        <span class="on"></span><span></span><span></span><span></span>
+      </div>
+      <div class="page-foot">点击顶部标签切换页面 · 连续点击左上角校徽有惊喜</div>
+    </div>
+  </div>
+
+  <!-- 历史页 -->
+  <div class="page" data-page="history">
+    <div class="page-inner">
+      <div class="page-title">
+        <h2>历史沿革</h2>
+        <p>点击年份卡片展开详情</p>
+      </div>
+      <div class="tl-list" id="timeline">
+        <div class="tl-item">
+          <div class="tl-head"><span class="year">1964</span><h4>凤阳县城南农业中学创办</h4><span class="arrow">▾</span></div>
+          <div class="tl-body"><p>学校前身诞生，校址由安徽省第四监狱小农场移交的百余亩土地和两排草房改建而成。</p></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-head"><span class="year">1974</span><h4>府城中学设立</h4><span class="arrow">▾</span></div>
+          <div class="tl-body"><p>另一支脉络府城中学创办，后增设高中部，升格为凤阳县第二中学。</p></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-head"><span class="year">2006</span><h4>正式定名“凤阳县第三中学”</h4><span class="arrow">▾</span></div>
+          <div class="tl-body"><p>2006年3月更名为凤阳县城南中学，同年7月经县政府常务会议同意，正式定名为凤阳县第三中学。</p></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-head"><span class="year">2010</span><h4>与凤阳二中初中部整合迁址</h4><span class="arrow">▾</span></div>
+          <div class="tl-body"><p>据凤阳县人民政府官网信息，2010年8月与凤阳二中初中部整合，迁入府城镇原凤阳二中校址办学。此为官方采信的整合时间节点。</p></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-head"><span class="year">2022</span><h4>启动扩建项目</h4><span class="arrow">▾</span></div>
+          <div class="tl-body"><p>规划总建筑面积约4.66万平方米，新建教学楼、行政办公楼、学生宿舍、食堂、风雨操场，改造原有教学楼与科技楼，并新建300米标准运动场。</p></div>
+        </div>
+      </div>
+      <div class="fu-card">
+        <h3>关于《三中赋》</h3>
+        <p>凤阳三中确有一篇以赋体写就的校园文学作品。据公开信息，2019年第四届校园文化艺术节上曾有朗诵节目《三中赋》上演。目前该赋全文未在公开渠道发布，具体内容与作者信息暂不可考。</p>
+        <p class="disclaimer">注：网络流传的所谓《三中赋》系他人戏仿之作，非凤阳三中官方作品，本页不予收录。</p>
+      </div>
+      <div class="page-foot">信息整理自公开资料 · 具体以学校官方发布为准</div>
+    </div>
+  </div>
+
+  <!-- 规模页 -->
+  <div class="page" data-page="scale">
+    <div class="page-inner">
+      <div class="page-title">
+        <h2>办学规模</h2>
+        <p>数据截至2024年9月 · 点击数字卡片查看说明</p>
+      </div>
+      <div class="stats" id="statsBox">
+        <div class="stat" data-tip="2024年9月共开设56个教学班"><div class="num" data-count="56">0</div><div class="label">教学班</div></div>
+        <div class="stat" data-tip="在校生3317人，是凤阳县城规模最大的初中"><div class="num" data-count="3317">0</div><div class="label">在校生</div></div>
+        <div class="stat" data-tip="在职教职工212人，专任教师179人"><div class="num" data-count="212">0</div><div class="label">教职工</div></div>
+        <div class="stat" data-tip="占地约3.7万平方米，扩建中"><div class="num" data-count="3.7" data-suffix="万">0</div><div class="label">占地㎡</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>硬件设施</h3>
+          <p>拥有科技馆、教学楼、综合楼，以及运动场、图书室、微机室、实验室等齐全设施。2022年启动扩建项目，规划新建教学楼、风雨操场、宿舍等，总建筑面积约4.66万平方米。</p>
+        </div>
+        <div class="card">
+          <h3>师资力量</h3>
+          <p>专任教师179人，本科率80%。教师队伍中包含省教坛新星、滁州市名教师、市学科带头人、市中青年骨干教师等教育教学骨干。</p>
+        </div>
+      </div>
+      <div class="page-foot">数据来源：学校公开信息（2024年9月）</div>
+    </div>
+  </div>
+
+  <!-- 荣誉页 -->
+  <div class="page" data-page="honor">
+    <div class="page-inner">
+      <div class="page-title">
+        <h2>荣誉与特色</h2>
+        <p>点击荣誉标签查看详情</p>
+      </div>
+      <div class="tag-cloud" id="tagCloud">
+        <span data-detail="教育部认定，校园足球特色学校，配备专业足球场地与教练团队。">全国青少年校园足球特色学校</span>
+        <span data-detail="安徽省教育厅评选，学校书屋藏书丰富，阅读环境优美。">安徽省“最美校园书屋”</span>
+        <span data-detail="滁州市科协认定，科普教育活动开展扎实。">滁州市科普示范校</span>
+        <span data-detail="滁州市教育局认定，心理健康教育体系完善。">滁州市心理健康教育示范校</span>
+        <span data-detail="滁州市体育传统项目学校，体育特色突出。">滁州市体育传统项目校</span>
+        <span data-detail="滁州市语言文字工作达标学校。">滁州市语言文字规范化学校</span>
+      </div>
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card">
+          <h3>非遗花鼓</h3>
+          <p>2013年成立非遗花鼓社团，校园内设有非遗花鼓传习基地。2025年在省级展演中获三等奖，并获推荐为非遗花鼓全国示范性特色学校（美育类）。</p>
+        </div>
+        <div class="card">
+          <h3>近期动态</h3>
+          <p>2024年12月举办第八届校园文化艺术节暨课后服务成果展演；2025年12月与安徽科技学院团委等签署“美育童心”结对协议，共建美育共同体。</p>
+        </div>
+      </div>
+      <div class="page-foot">荣誉信息整理自公开资料</div>
+    </div>
+  </div>
+
+  <!-- 地址页 -->
+  <div class="page" data-page="contact">
+    <div class="page-inner">
+      <div class="page-title">
+        <h2>地址与交通</h2>
+        <p>点击卡片查看详细提示</p>
+      </div>
+      <div class="grid-2">
+        <div class="card" data-tip="主地址：安徽省滁州市凤阳县府城镇文华路16号">
+          <h3>学校地址</h3>
+          <ul class="info-list">
+            <li><span class="k">主地址</span>安徽省滁州市凤阳县府城镇文华路16号</li>
+            <li><span class="k">其他表述</span>明陵路 / 宜文路（不同资料记载存在差异）</li>
+            <li><span class="k">位置特征</span>府城西护城河畔，明中都皇故城东南</li>
+          </ul>
+        </div>
+        <div class="card" data-tip="公交：凤阳2路、3路、4路、101路，学校大门口设停靠站">
+          <h3>公交与提示</h3>
+          <ul class="info-list">
+            <li><span class="k">公交线路</span>凤阳2路、3路、4路、101路等，学校大门口设停靠站</li>
+            <li><span class="k">招生提示</span>学区划分及招生政策请关注凤阳县教体局或学校官方最新公告</li>
+            <li><span class="k">规模说明</span>2026年七年级计划招生26个班、1300人，为县城规模最大的初中校</li>
+          </ul>
+        </div>
+      </div>
+      <div class="page-foot">具体政策与数据以学校及凤阳县教育体育局官方发布为准</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="eggLayer"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ===== Toast ===== */
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+  }
+
+  /* ===== 页面切换 ===== */
+  const tabs = document.querySelectorAll('#navTabs button');
+  const pages = document.querySelectorAll('.page');
+  let currentPage = 'home';
+
+  function goTo(name) {
+    if (name === currentPage) return;
+    const oldPage = document.querySelector('.page.active');
+    const newPage = document.querySelector('.page[data-page="' + name + '"]');
+    if (!oldPage || !newPage) return;
+
+    oldPage.classList.remove('active');
+    oldPage.classList.add('exit-left');
+    setTimeout(() => oldPage.classList.remove('exit-left'), 400);
+
+    newPage.classList.add('active
